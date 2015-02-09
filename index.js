@@ -1,4 +1,4 @@
-var dot = require('robust-dot-product');
+var dot = require('gl-matrix').vec3.dot;
 var sub = require('gl-matrix').vec3.subtract;
 var norm = require('gl-matrix').vec3.normalize;
 var cross = require('gl-matrix').vec3.cross;
@@ -28,6 +28,7 @@ module.exports = function (a, b) {
 function containsOrigin (simplex, D) {
     if (simplex.length === 2) return contains2(simplex, D);
     if (simplex.length === 3) return contains3(simplex, D);
+    if (simplex.length === 4) return contains4(simplex, D);
     return null;
 }
 
@@ -37,8 +38,6 @@ function contains2 (simplex, D) {
     var AB = sub([], B, A);
     var A0 = sub([], origin, A);
     cross(D, cross([], AB, A0), AB);
-    if (dot(D, A0) < 0) return false;
-    return true;
 }
 
 function contains3 (simplex, D) {
@@ -60,6 +59,10 @@ function contains3 (simplex, D) {
         set(D, acp);
     }
     else return true;
+}
+
+function contains4 (simplex, D) {
+    throw new Error('tetrahedron case not implemented');
 }
 
 function support (out, D, a, b) {
