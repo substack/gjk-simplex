@@ -9,4 +9,12 @@ var b = [
     [ 5, 5, 5 ],
     [ 15, 5, 15 ]
 ];
-console.log(intersect([], a, b));
+/*
+var start = Date.now();
+var out = [];
+for (var i = 0; i < 1000; i++) {
+    intersect(out, a, b);
+}
+console.log((Date.now() - start) / i);
+*/
+console.log(intersect(a, b));
