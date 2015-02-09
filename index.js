@@ -1,84 +1,20 @@
 var msum = require('convex-minkowski-sum');
-//var inside = require('point-in-polygon');
 var dot = require('robust-dot-product');
-var sub = require('gl-matrix').vec3.subtract;
-var norm = require('gl-matrix').vec3.normalize;
-var cross = require('gl-matrix').vec3.cross;
+var closest = require('polytope-closest-point');
 
 var origin = [0,0,0];
 var nb = [[0,0,0],[0,0,0],[0,0,0]];
-var nD = [0,0,0];
-var tmpa = [0,0,0];
-var tmpb = [0,0,0];
-var tmpc = [0,0,0];
-var pts = [null,null,null,null];
+var cell = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
-module.exports = function (a, b) {
-    sub(nb[0], origin, b[0]);
-    sub(nb[1], origin, b[1]);
-    sub(nb[2], origin, b[2]);
-    
+module.exports = function (out, a, b) {
+    pnegate(nb, b);
     var mdiff = msum(a, nb);
-    //if (!inside(origin, mdiff)) return null;
-    
-    var D = [ 0, 0, 1 ];
-    var S = support(tmpa, D, a, b);
-    sub(D, origin, S);
-    var pts = [ S ];
-    
-    for (var i = 1; i <= 10; i++) {
-        var A = support(tmpa, D, a, b);
-console.log(A); 
-        if (dot(A, D) < 0) return null; // no intersection
-        pts.push(copy(A));
-        var r = evolve(tmpa, pts[pts.length-1], pts[pts.length-2], D);
-        if (r) {
-            console.log('!!!', r);
-            break;
-        }
-        else {
-            sub(D, origin, pts[pts.length-1]);
-        }
-    }
-    
-    return mdiff;
+    closest(cell, mdiff, origin, out);
+    return out;
 };
 
-function evolve (out, a, b, D) {
-    var ab = sub(tmpa, b, a);
-    var a0 = sub(tmpb, origin, a);
-    if (dot(ab, a0) > 0) {
-        cross(out, ab, cross(tmpc, a0, ab));
-        
-        if (out[0] === 0 && out[1] === 0 && out[2] === 0) {
-            // perpendicular trick
-            out[0] = -ab[1];
-            out[1] = ab[0];
-            out[2] = 0;
-            norm(out, out);
-        }
-        return out;
-    }
+function pnegate (out, p) {
+    out[0][0] = -p[0][0]; out[0][1] = -p[0][1]; out[0][2] = -p[0][2];
+    out[1][0] = -p[1][0]; out[1][1] = -p[1][1]; out[1][2] = -p[1][2];
+    out[2][0] = -p[2][0]; out[2][1] = -p[2][1]; out[2][2] = -p[2][2];
 }
-
-function support (out, D, a, b) {
-    var maxa = -Infinity;
-    var maxb = -Infinity;
-    var pa = null, pb = null;
-    
-    for (var i = 1; i < a.length; i++) {
-        var ma = dot(D, a[i]);
-        var mb = -dot(D, b[i]);
-        if (ma > maxa) {
-            pa = a[i];
-            maxa = ma;
-        }
-        if (mb > maxb) {
-            pb = b[i];
-            maxb = mb;
-        }
-    }
-    return sub(out, pa, pb);
-}
-
-function copy (x) { return x.slice() }
