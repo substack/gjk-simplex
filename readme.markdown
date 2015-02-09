@@ -1,4 +1,4 @@
-# triangle-triangle-intersection-3d
+# gjk-convex-intersection
 
 compute the intersection, if any, between 2 triangles in 3 dimensions
 using GJK
