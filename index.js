@@ -31,32 +31,24 @@ module.exports = function (a, b) {
 console.log(A); 
         if (dot(A, D) < 0) return null; // no intersection
         pts.push(copy(A));
-        var r = evolve(pts, D);
+        var r = evolve(pts[pts.length-1], pts[pts.length-2], D);
         if (r) {
             console.log('!!!', r);
             break;
         }
         else {
-            //sub(D, origin, A);
+            sub(D, origin, pts[pts.length-1]);
         }
     }
     
     return mdiff;
 };
 
-function evolve (pts, D) {
-console.log('pts=', pts);
-    var a = pts[pts.length-1];
-    var b = pts[pts.length-2];
-    
+function evolve (a, b, D) {
     var ab = sub(tmpa, b, a);
     var a0 = sub(tmpb, origin, a);
     if (dot(ab, a0) > 0) {
         return cross(tmpc, ab, cross(tmpd, a0, ab));
-    }
-    else {
-        sub(D, origin, a);
-console.log('D=', D); 
     }
 }
 
