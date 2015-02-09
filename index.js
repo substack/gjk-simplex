@@ -1,50 +1,81 @@
+var dot = require('robust-dot-product');
 var sub = require('gl-matrix').vec3.subtract;
-var triray = require('./lib/triray.js');
+var norm = require('gl-matrix').vec3.normalize;
+var cross = require('gl-matrix').vec3.cross;
 
-var d = [0,0,0];
+var origin = [0,0,0];
+var nb = [[0,0,0],[0,0,0],[0,0,0]];
+var nD = [0,0,0];
+var tmpa = [0,0,0];
+var tmpb = [0,0,0];
+var tmpc = [0,0,0];
+var pts = [null,null,null,null];
 
 module.exports = function (a, b) {
-    var t;
+    sub(nb[0], origin, b[0]);
+    sub(nb[1], origin, b[1]);
+    sub(nb[2], origin, b[2]);
     
-    sub(d, b[0], b[1]);
-    t = triray(a, b[0], d);
-    if (t !== null) {
-        console.log('01!', t);
-        return;
+    var mdiff = msum(a, nb);
+    
+    var D = [ 0, 0, 1 ];
+    var S = support(tmpa, D, a, b);
+    sub(D, origin, S);
+    var pts = [ S ];
+    
+    for (var i = 1; i <= 10; i++) {
+        var A = support(tmpa, D, a, b);
+console.log(A); 
+        if (dot(A, D) < 0) return null; // no intersection
+        pts.push(copy(A));
+        var r = evolve(tmpa, pts[pts.length-1], pts[pts.length-2], D);
+        if (r) {
+            console.log('!!!', r);
+            break;
+        }
+        else {
+            sub(D, origin, pts[pts.length-1]);
+        }
     }
     
-    sub(d, b[1], b[0]);
-    t = triray(a, b[0], d);
-    if (t !== null) {
-        console.log('10!', t);
-        return;
-    }
-    
-    sub(d, b[1], b[2]);
-    t = triray(a, b[1], d);
-    if (t !== null) {
-        console.log('12!', t);
-        return;
-    }
-    
-    sub(d, b[2], b[1]);
-    t = triray(a, b[1], d);
-    if (t !== null) {
-        console.log('21!', t);
-        return;
-    }
-    
-    sub(d, b[0], b[2]);
-    t = triray(a, b[0], d);
-    if (t !== null) {
-        console.log('02!', t);
-        return;
-    }
-    
-    sub(d, b[2], b[0]);
-    t = triray(a, b[0], d);
-    if (t !== null) {
-        console.log('20!', t);
-        return;
-    }
+    return mdiff;
 };
+
+function evolve (out, a, b, D) {
+    var ab = sub(tmpa, b, a);
+    var a0 = sub(tmpb, origin, a);
+    if (dot(ab, a0) > 0) {
+        cross(out, ab, cross(tmpc, a0, ab));
+        
+        if (out[0] === 0 && out[1] === 0 && out[2] === 0) {
+            // perpendicular trick
+            out[0] = -ab[1];
+            out[1] = ab[0];
+            out[2] = 0;
+            norm(out, out);
+        }
+        return out;
+    }
+}
+
+function support (out, D, a, b) {
+    var maxa = -Infinity;
+    var maxb = -Infinity;
+    var pa = null, pb = null;
+    
+    for (var i = 1; i < a.length; i++) {
+        var ma = dot(D, a[i]);
+        var mb = -dot(D, b[i]);
+        if (ma > maxa) {
+            pa = a[i];
+            maxa = ma;
+        }
+        if (mb > maxb) {
+            pb = b[i];
+            maxb = mb;
+        }
+    }
+    return sub(out, pa, pb);
+}
+
+function copy (x) { return x.slice() }
