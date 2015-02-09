@@ -1,7 +1,8 @@
 var msum = require('convex-minkowski-sum');
 //var inside = require('point-in-polygon');
 var dot = require('robust-dot-product');
-var sub = require('gl-matrix').vec3.sub;
+var sub = require('gl-matrix').vec3.subtract;
+var norm = require('gl-matrix').vec3.normalize;
 var cross = require('gl-matrix').vec3.cross;
 
 var origin = [0,0,0];
@@ -10,7 +11,6 @@ var nD = [0,0,0];
 var tmpa = [0,0,0];
 var tmpb = [0,0,0];
 var tmpc = [0,0,0];
-var tmpd = [0,0,0];
 var pts = [null,null,null,null];
 
 module.exports = function (a, b) {
@@ -31,7 +31,7 @@ module.exports = function (a, b) {
 console.log(A); 
         if (dot(A, D) < 0) return null; // no intersection
         pts.push(copy(A));
-        var r = evolve(pts[pts.length-1], pts[pts.length-2], D);
+        var r = evolve(tmpa, pts[pts.length-1], pts[pts.length-2], D);
         if (r) {
             console.log('!!!', r);
             break;
@@ -44,11 +44,20 @@ console.log(A);
     return mdiff;
 };
 
-function evolve (a, b, D) {
+function evolve (out, a, b, D) {
     var ab = sub(tmpa, b, a);
     var a0 = sub(tmpb, origin, a);
     if (dot(ab, a0) > 0) {
-        return cross(tmpc, ab, cross(tmpd, a0, ab));
+        cross(out, ab, cross(tmpc, a0, ab));
+        
+        if (out[0] === 0 && out[1] === 0 && out[2] === 0) {
+            // perpendicular trick
+            out[0] = -ab[1];
+            out[1] = ab[0];
+            out[2] = 0;
+            norm(out, out);
+        }
+        return out;
     }
 }
 
